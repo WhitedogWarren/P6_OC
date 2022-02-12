@@ -4,7 +4,7 @@ const fs = require('fs');
 exports.getAllSauces = (req, res, next) => {
     Sauce.find()
         .then(sauces => res.status(200).json(sauces))
-        .catch(error => res.status(400).json({ error: new Error('Sauces non trouvée')}));
+        .catch(error => res.status(400).json(error));
 };
 
 exports.getOneSauce = (req, res, next) => {
@@ -14,7 +14,7 @@ exports.getOneSauce = (req, res, next) => {
         })
         .catch(error => {
             console.log('sauce non trouvée');
-            res.status(404).json({ error: new Error('Sauce non trouvée')});
+            res.status(404).json(error);
         });
 };
 
@@ -48,16 +48,16 @@ exports.addNewSauce = (req, res, next) => {
     
     sauce.save()
         .then(() => res.status(201).json({ message: 'Sauce enregistrée'}))
-        .catch(error => res.status(400).json({ error: new Error('Erreur lors de l\'enregistrement. Veuillez réessayer')}));
+        .catch(error => res.status(400).json(error));
     
 };
 
 exports.updateSauce = (req, res, next) => { 
     Sauce.findOne({ _id: req.params.id}).then(sauce => {
         if(!sauce)
-            res.status(404).json({ error: new Error('Sauce non trouvée')});
+            res.status(404).json({message: 'Sauce non trouvée'});
         if(sauce.userId !== req.auth.userId)
-            res.status(401).json({ error: new Error('Requête non autorisée!')});
+            res.status(401).json({ message: 'Requête non autorisée!'});
         const sauceObject = req.file ?
             {
                 ...JSON.parse(req.body.sauce),
@@ -71,14 +71,12 @@ exports.updateSauce = (req, res, next) => {
             }
         }
         if(emptyFields) {
-            console.log('champs vides : ');
-            console.log(emptyFields);
             return res.status(400).json({ message: 'champs vides : ' + emptyFields});
         }
         function updateProcess() {
             Sauce.updateOne({ _id: req.params.id }, { ...sauceObject, _id:req.params.id})
                 .then(() => res.status(200).json({ message: 'Sauce modifiée' }))
-                .catch(error => res.status(400).json({ error: new Error('Erreur lors de l\'enregistrement. Veuillez réessayer.')}));
+                .catch(error => res.status(400).json(error));
         }
 
         if(req.file) {
@@ -91,7 +89,7 @@ exports.updateSauce = (req, res, next) => {
         }
         
     })
-    .catch(error => res.status(400).json({ error: new Error('Erreur lors de l\'enregistrement. Veuillez réessayer.')}));
+    .catch(error => res.status(400).json(error));
 };
 
 exports.deleteSauce = (req, res, next) => {
@@ -111,7 +109,7 @@ exports.deleteSauce = (req, res, next) => {
             });
         }
     )
-    .catch(error => res.status(400).json({ error: new Error('Erreur lors de la suppression. Veuillez réessayer')}));
+    .catch(error => res.status(400).json(error));
 }
 
 exports.addLike = (req, res, next) => {
@@ -121,25 +119,25 @@ exports.addLike = (req, res, next) => {
             const dislikes = sauce.usersDisliked;
             if(req.body.like == 1) {
                 if(likes.includes(req.auth.userId) || dislikes.includes(req.auth.userId)) {
-                    res.status(401).json({ error: new Error('Vous ne pouvez émettre qu\'un seul like ou dislike!')});
+                    res.status(401).json({ message: 'Vous ne pouvez émettre qu\'un seul like ou dislike!'});
                 }
                 likes.push(req.auth.userId);
                 Sauce.updateOne({ _id: req.params.id}, {usersLiked: likes, likes: likes.length})
                     .then(() => res.status(200).json({ message: 'Sauce mise à jour'}))
-                    .catch(error => res.status(400).json({ error: new Error('Erreur lors de la mise à jour des informations. Veuillez réessayer')}));
+                    .catch(error => res.status(400).json(error));
             }
             if(req.body.like == -1) {
                 if(likes.includes(req.auth.userId) || dislikes.includes(req.auth.userId)) {
-                    res.status(401).json({ error: new Error('Vous ne pouvez émette qu\'un seul like ou dislike!')});
+                    res.status(401).json({ message: 'Vous ne pouvez émette qu\'un seul like ou dislike!'});
                 }
                 dislikes.push(req.auth.userId);
                 Sauce.updateOne({ _id: req.params.id}, {usersDisliked: dislikes, dislikes: dislikes.length})
                     .then(() => res.status(200).json({ message: 'sauce mise à jour'}))
-                    .catch(error => res.status(400).json({ error: new Error('Erreur lors de la mise à jour des informations. Veuillez réessayer')}));
+                    .catch(error => res.status(400).json(error));
             }
             if(req.body.like == 0) {
                 if(!likes.includes(req.auth.userId) && !dislikes.includes(req.auth.userId)) {
-                    res.status(400).json({ error: new Error('Vous n\'avez pas encore voté pour cette sauce !')});
+                    res.status(400).json({ message: 'Vous n\'avez pas encore voté pour cette sauce !'});
                 }
                 if(likes.includes(req.auth.userId)) {
                     likes.splice(likes.indexOf(req.auth.id), 1);
@@ -149,8 +147,8 @@ exports.addLike = (req, res, next) => {
                 }
                 Sauce.updateOne({ _id: req.params.id}, {usersLiked: likes, likes: likes.length, usersDisliked: dislikes, dislikes: dislikes.length})
                     .then(() => res.status(200).json({ message: 'Sauce mise à jour'}))
-                    .catch(error => res.status(400).json({ error: new Error('Erreur lors de la mise à jour des informations. Veuillez réessayer')}));
+                    .catch(error => res.status(400).json(error));
             }
         })
-        .catch(error => res.status(400).json({ error: new Error('Erreur lors de la mise à jour des informations. Veuillez réessayer')}));
+        .catch(error => res.status(400).json(error));
 }
