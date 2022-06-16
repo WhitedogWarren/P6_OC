@@ -1,4 +1,4 @@
-# lucaswerquin_6_11022022
+# P6_OC
 
 This API code requires a mongoDB database :
  Table "sauces" :
